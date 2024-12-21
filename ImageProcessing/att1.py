@@ -1,44 +1,49 @@
-import cv2
 import numpy as np
-from matplotlib import pyplot as plt
-import os
+from skimage import io, img_as_float
+from skimage.exposure import equalize_hist
+from skimage.filters import gaussian
+import matplotlib.pyplot as plt
 
 def local_histogram_equalization(image, window_size):
-    """Aplica equalização local do histograma em uma imagem."""
+    # Obter dimensões da imagem
     height, width = image.shape
-    pad_size = window_size // 2
-    padded_image = cv2.copyMakeBorder(image, pad_size, pad_size, pad_size, pad_size, cv2.BORDER_REFLECT)
+    half_window = window_size // 2
+    
+    # Inicializar imagem de saída
     equalized_image = np.zeros_like(image)
     
-    for i in range(height):
-        for j in range(width):
-            local_window = padded_image[i:i + window_size, j:j + window_size]
-            equalized_image[i, j] = cv2.equalizeHist(local_window)[pad_size, pad_size]
+    # Percorrer a imagem com janela deslizante
+    for i in range(half_window, height - half_window):
+        for j in range(half_window, width - half_window):
+            # Extrair janela local
+            local_region = image[i - half_window:i + half_window + 1, j - half_window:j + half_window + 1]
+            # Equalizar histograma local
+            equalized_image[i, j] = equalize_hist(local_region)[half_window, half_window]
     
     return equalized_image
 
 # Carregar imagem
-image = cv2.imread(r'C:\Users\deric\git\ProjectsPy\ImageProcessing\prova.jpg', cv2.IMREAD_GRAYSCALE)
+image = img_as_float(io.imread(r'C:\Users\deric\git\ProjectsPy\ImageProcessing\prova.jpg', as_gray=True))
 
-# Processar com diferentes tamanhos de janelas
-window_sizes = [31, 71]  # Alterar conforme necessário
-processed_images = []
+# Suavizar imagem para reduzir ruído antes da equalização
+smoothed_image = gaussian(image, sigma=1)
 
-for size in window_sizes:
-    processed_image = local_histogram_equalization(image, size)
-    processed_images.append(processed_image)
-    output_filename = f'processed_window_{size}.png'
-    cv2.imwrite(output_filename, processed_image)
+# Aplicar equalização local
+window_sizes = [14, 28]  # Teste tamanhos de janela maiores
+results = [local_histogram_equalization(smoothed_image, size) for size in window_sizes]
 
-# Mostrar e salvar resultados
-for idx, img in enumerate(processed_images):
-    plt.figure()
-    plt.title(f"Equalização Local - Janela {window_sizes[idx]}x{window_sizes[idx]}")
-    plt.imshow(img, cmap='gray')
+# Exibir resultados
+plt.figure(figsize=(15, 5))
+plt.subplot(1, len(results) + 1, 1)
+plt.imshow(image, cmap='gray')
+plt.title('Imagem Original')
+plt.axis('off')
+
+for i, result in enumerate(results):
+    plt.subplot(1, len(results) + 1, i + 2)
+    plt.imshow(result, cmap='gray')
+    plt.title(f'Equalização Local - Janela {window_sizes[i]}x{window_sizes[i]}')
     plt.axis('off')
-    plt.savefig(f"result_{window_sizes[idx]}.png")
-plt.show()
 
-# OCR e conversão para texto
-os.system("ocrmypdf prova.jpeg output.pdf")
-os.system("pdftotext output.pdf output.txt")
+plt.tight_layout()
+plt.show()

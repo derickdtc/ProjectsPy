@@ -1,40 +1,53 @@
-import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-import os
+from skimage.io import imread
 
-def local_histogram_equalization(image, window_size, clip_limit=2.0):
-    """Aplica a equalização local do histograma usando CLAHE."""
-    clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=(window_size, window_size))
-    return clahe.apply(image)
+# Carregar a imagem
+img = imread(r'C:\Users\deric\git\ProjectsPy\ImageProcessing\prova.jpeg')
 
-# Carregar a imagem em escala de cinza
-image = cv2.imread(r'C:\Users\deric\git\ProjectsPy\ImageProcessing\prova.jpg', cv2.IMREAD_GRAYSCALE)
-if image is None:
-    print("Erro: Não foi possível carregar a imagem. Verifique o caminho ou o formato.")
-    exit()
+# Garantir que a imagem está em escala de cinza
+if img.ndim == 3:  # Imagem colorida
+    img = np.mean(img, axis=2).astype(np.uint8)  # Converter para escala de cinza
 
-# Aplicar a equalização local com diferentes tamanhos de janela
-window_sizes = [15, 51]
-processed_images = []
-for size in window_sizes:
-    processed_images.append(local_histogram_equalization(image, size))
+# Parâmetros da janela deslizante
+janela = 32  # Tamanho da janela (ajuste conforme necessário)
+metade_janela = janela // 2
 
-# Exibir as imagens processadas e a original
-plt.figure(figsize=(15, 8))
+# Criar a imagem de saída
+output = np.zeros_like(img, dtype=np.uint8)
 
-# Original
-plt.subplot(1, 3, 1)
-plt.title("Imagem Original")
-plt.imshow(image, cmap='gray')
-plt.axis('off')
+# Dimensões da imagem
+altura, largura = img.shape
 
-# Processadas
-for i, (size, processed_image) in enumerate(zip(window_sizes, processed_images)):
-    plt.subplot(1, 3, i + 2)
-    plt.title(f"Equalização Local - Janela {size}x{size}")
-    plt.imshow(processed_image, cmap='gray')
-    plt.axis('off')
+# Função para calcular a transformação local
+def equalizar_local(patch):
+    h, _ = np.histogram(patch, bins=256, range=(0, 256))
+    h = h.astype('float') / patch.size
+    T = (np.cumsum(h) * 255).astype('uint8')
+    return T
+
+# Aplicar a equalização local
+for i in range(altura):
+    for j in range(largura):
+        # Obter a janela ao redor do pixel (com bordas tratadas)
+        i_min = max(i - metade_janela, 0)
+        i_max = min(i + metade_janela + 1, altura)
+        j_min = max(j - metade_janela, 0)
+        j_max = min(j + metade_janela + 1, largura)
+        
+        patch = img[i_min:i_max, j_min:j_max]  # Extrair submatriz
+        T = equalizar_local(patch)  # Obter transformação local
+        output[i, j] = T[img[i, j]]  # Aplicar transformação
+
+# Plotar resultados
+_, ax = plt.subplots(1, 2, figsize=(10, 5))
+ax[0].imshow(img, cmap='gray')
+ax[0].set_title('Imagem Original (Baixo Contraste)')
+ax[0].axis('off')
+
+ax[1].imshow(output, cmap='gray')
+ax[1].set_title('Imagem Equalizada Localmente')
+ax[1].axis('off')
 
 plt.tight_layout()
 plt.show()
