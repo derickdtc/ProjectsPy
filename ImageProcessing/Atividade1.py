@@ -1,53 +1,61 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from skimage.io import imread
+from skimage.io import imread, imsave
+from math import floor
+import os
 
-# Carregar a imagem
+# Carregar e converter imagem para escala de cinza
 img = imread(r'C:\Users\deric\git\ProjectsPy\ImageProcessing\prova.jpeg')
+img = np.dot(img[...,:3], [0.2989, 0.5870, 0.1140]).astype(np.uint8)  # converte RGB para cinza
+      
+def eq_local(img, dimensao):
+    img_eq = np.copy(img) 
+    altura = img.shape[0]
+    largura = img.shape[1]
+    
+    for i in range(altura): 
+        for j in range(largura):  # Para cada pixel
+            local = img[max(0, i - dimensao//2):min(altura, i + dimensao//2 + 1), 
+                        max(0, j - dimensao//2):min(largura, j + dimensao//2 + 1)]  # Região local
+            
+            h, _ = np.histogram(local, bins=256, range=(0, 256))  # Calcula histograma local
+            h = h.astype(float) / local.size  # Normaliza
+            
+            h = np.clip(h, 0, 0.005)  # Aplica clip limit
+            h = h / np.sum(h)  # Normaliza novamente
+            
+            equalizado = (np.cumsum(h) * 255).astype('uint8')  # Calcula valores equalizados
+            img_eq[i, j] = equalizado[img[i, j]]  # Aplica transformação
+            
+    return img_eq
 
-# Garantir que a imagem está em escala de cinza
-if img.ndim == 3:  # Imagem colorida
-    img = np.mean(img, axis=2).astype(np.uint8)  # Converter para escala de cinza
+# Aplicar equalização local com diferentes tamanhos de janelas
+img_eq1 = eq_local(img, 80)
+img_eq2 = eq_local(img, 150)
 
-# Parâmetros da janela deslizante
-janela = 32  # Tamanho da janela (ajuste conforme necessário)
-metade_janela = janela // 2
+# Salvar imagens equalizadas
+imsave("img_eq1.png", img_eq1)
+imsave("img_eq2.png", img_eq2)
 
-# Criar a imagem de saída
-output = np.zeros_like(img, dtype=np.uint8)
+# Gerar PDFs a partir das imagens
+os.system("convert img_eq1.png img_eq1.pdf")  
+os.system("convert img_eq2.png img_eq2.pdf")
 
-# Dimensões da imagem
-altura, largura = img.shape
+# Tornar PDFs pesquisáveis usando OCRmyPDF
+os.system("ocrmypdf img_eq1.pdf img_eq1_ocr.pdf")
+os.system("ocrmypdf img_eq2.pdf img_eq2_ocr.pdf")
 
-# Função para calcular a transformação local
-def equalizar_local(patch):
-    h, _ = np.histogram(patch, bins=256, range=(0, 256))
-    h = h.astype('float') / patch.size
-    T = (np.cumsum(h) * 255).astype('uint8')
-    return T
+# Mostrar as imagens e salvar os PDFs
+plt.subplot(1, 3, 1)
+plt.title('Original')
+plt.imshow(img, cmap='gray')
 
-# Aplicar a equalização local
-for i in range(altura):
-    for j in range(largura):
-        # Obter a janela ao redor do pixel (com bordas tratadas)
-        i_min = max(i - metade_janela, 0)
-        i_max = min(i + metade_janela + 1, altura)
-        j_min = max(j - metade_janela, 0)
-        j_max = min(j + metade_janela + 1, largura)
-        
-        patch = img[i_min:i_max, j_min:j_max]  # Extrair submatriz
-        T = equalizar_local(patch)  # Obter transformação local
-        output[i, j] = T[img[i, j]]  # Aplicar transformação
+plt.subplot(1, 3, 2)
+plt.title('80x80')
+plt.imshow(img_eq1, cmap='gray')
 
-# Plotar resultados
-_, ax = plt.subplots(1, 2, figsize=(10, 5))
-ax[0].imshow(img, cmap='gray')
-ax[0].set_title('Imagem Original (Baixo Contraste)')
-ax[0].axis('off')
+plt.subplot(1, 3, 3)
+plt.title('150x150')
+plt.imshow(img_eq2, cmap='gray')
 
-ax[1].imshow(output, cmap='gray')
-ax[1].set_title('Imagem Equalizada Localmente')
-ax[1].axis('off')
-
-plt.tight_layout()
 plt.show()
