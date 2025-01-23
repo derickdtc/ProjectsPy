@@ -1,23 +1,27 @@
-from skimage.transform import rescale
-from skimage.io import imread
-from skimage.filters import gaussian
-from scipy.ndimage import convolve
+import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-def highboost_filter(image, A=2.0, sigma=1.0):
+def highboost_filter(image, A=2.0):
+    """
+    Aplica o filtro highboost em uma imagem usando convolução eficiente.
     
-    # Suavizar a imagem usando um filtro gaussiano
-    smoothed = gaussian(image, sigma=sigma, mode='reflect')
-
+    Parâmetros:
+    - image: Imagem original em escala de cinza.
+    - A: Fator de amplificação.
+    
+    Retorna:
+    - Imagem com filtro highboost aplicado.
+    """
+    # Aplicar filtro gaussiano para suavização (filtro passa-baixa)
+    blurred = cv2.GaussianBlur(image, (5, 5), 1.0)
+    
     # Calcular a máscara de alta frequência
-    mask = image - smoothed
-
+    mask = cv2.subtract(image, blurred)
+    
     # Aplicar o filtro highboost
-    highboost = image + A * mask
-
-    # Normalizar os valores para 0-255
-    highboost = np.clip(highboost, 0, 1)  # Como a imagem está normalizada para [0, 1]
+    highboost = cv2.addWeighted(image, 1.0, mask, A, 0)
+    
     return highboost
 
 # Processar todas as imagens
@@ -25,15 +29,15 @@ for i in range(1, 6):  # Iterar sobre placa01.png até placa05.png
     filename = f'placa0{i}.png'
     
     # Carregar a imagem
-    image = imread(filename, as_gray=True)
+    image = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
 
     # Reduzir e restaurar a escala
-    scale = 1 / 4
-    image_rescaled = rescale(image, scale, anti_aliasing=True)
-    image_restored = rescale(image_rescaled, 1 / scale, anti_aliasing=True)
+    scale = 0.25
+    image_rescaled = cv2.resize(image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+    image_restored = cv2.resize(image_rescaled, image.shape[::-1], interpolation=cv2.INTER_CUBIC)
     
     # Aplicar o filtro highboost
-    highboost_image = highboost_filter(image_restored, A=2.0, sigma=1.0)
+    highboost_image = highboost_filter(image_restored, A=2.0)
     
     # Plotar os resultados
     fig, ax = plt.subplots(1, 4, figsize=(15, 5))
