@@ -53,10 +53,7 @@ def binary_opening(image, se):
 def morphological_skeleton(image, se):
     """
     Calcula o esqueleto morfológico da imagem binária 'image' usando o elemento estruturante 'se'.
-    
-    A ideia é iterativamente erodir a imagem e, a cada iteração, calcular:
-        S_k = (A ⊖ kB) - ((A ⊖ kB) ∘ B)
-    e acumular os S_k até que a imagem erodida fique vazia.
+        
     """
     img_current = image.copy()
     skeleton = np.zeros_like(image)
@@ -131,13 +128,8 @@ def follow_branch(skel, start, max_length):
 
 def refined_prune_skeleton(skel, branch_length_threshold=5):
     """
-    Remove ramos espúrios da imagem esquelética.
-    
-    Em vez de remover iterativamente todos os endpoints, esta função
-    segue o ramo a partir de cada endpoint e, se o comprimento do ramo for menor
-    ou igual ao limiar definido (branch_length_threshold), remove-o.
-    
-    Isso evita que partes significativas da digital sejam removidas.
+    Remove ramos espúrios da imagem esquelética.   
+   
     """
     skel_pruned = skel.copy()
     endpoints = find_endpoints(skel_pruned)
@@ -152,7 +144,6 @@ def refined_prune_skeleton(skel, branch_length_threshold=5):
 
 # %% Processamento da Imagem
 
-# Carrega a imagem (certifique-se de que "digital.png" esteja no mesmo diretório)
 img = io.imread('digital.png')
 
 # Converte para escala de cinza, se necessário
@@ -165,7 +156,6 @@ else:
 img_gray = img_as_ubyte(img_gray)
 img_norm = img_gray / 255.0
 
-# Binarização: ajuste o threshold conforme necessário
 threshold = 0.5
 img_bin = (img_norm > threshold).astype(np.uint8)
 
@@ -176,7 +166,6 @@ se = np.ones((3, 3), dtype=np.uint8)
 skeleton = morphological_skeleton(img_bin, se)
 
 # %% Poda Refinada
-# O parâmetro branch_length_threshold pode ser ajustado; valores pequenos (ex.: 5)
 # removem apenas ramos muito curtos, preservando a estrutura principal.
 pruned_skeleton = refined_prune_skeleton(skeleton, branch_length_threshold=5)
 
