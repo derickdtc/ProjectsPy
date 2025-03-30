@@ -237,23 +237,19 @@ def detect_vehicle(image_path):
 
 def main():
     image_list = [
-        "imgsNaoUsadas/imagemPIMG.jpeg",
-        "imgsNaoUsadas/imagemPIMG2.jpeg",
-        "imgsNaoUsadas/imagemPIMG3.jpeg",
-        "imgsNaoUsadas/imagemPIMG4.jpeg",
+        "naoECarro/imagemPIMG.jpeg",
+        "naoECarro/imagemPIMG2.jpeg",
+        "naoECarro/imagemPIMG3.jpeg",
         "image_0042.jpg",
         "image_0014.jpg",
         "image_0028.jpg",  
         "image_0012.jpg",
-        #"image_0002.jpg",
         "image_0003.jpg",
         "image_0004.jpg",
-        #"image_0005.jpg",
         "image_0006.jpg",
         "image_0007.jpg",
         "image_0008.jpg",
         "image_0009.jpg",
-        #"image_0010.jpg",
     ]
     for path in image_list:
         detect_vehicle(path)
