@@ -130,7 +130,7 @@ def hough_circle_peaks(hspaces, raios, total_num_peaks=10, threshold=None, nhood
 
 if __name__ == "__main__":
     # 1) Carrega a imagem (certifique-se de que "imagemPIMG.jpeg" está no mesmo diretório)
-    img = imread("imagemPIMG.jpeg")
+    img = imread("image_0008.jpg")
     
     # Converte para escala de cinza se necessário
     if img.ndim == 3:
@@ -150,8 +150,8 @@ if __name__ == "__main__":
     img_bin = binary_opening(img_bin)
     
     # 5) Define o raio fixo (único) a ser testado: 10 pixels
-    raio_fixo = 37
-    raios = [37]
+    raio_fixo = 12
+    raios = [12]
     
     # 6) Computa o acumulador usando a função otimizada (baseada em gradiente)
     acumulador = hough_circle_gradient(img_bin, img_gray, raios)

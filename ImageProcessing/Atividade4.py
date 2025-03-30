@@ -109,7 +109,7 @@ def naive_hough_circle_peaks(accumulator, total_num_peaks=10, threshold=None, nh
 # Execução do código principal (como no notebook do professor)
 if __name__ == '__main__':
     # 1. Carrega a imagem e converte para escala de cinza
-    img = imread("imagemPIMG2.jpeg")
+    img = imread("image_0008.jpg")
     if img.ndim == 3:
         img_gray = rgb2gray(img)
     else:
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     plt.show()
     
     # 6. Aplicação da Transformada de Hough ingênua para um raio fixo
-    raio_fixo = 152
+    raio_fixo = 15
     accumulator = naive_hough_circle(binary, raio_fixo)
     
     # 7. Exibe a grade de acumuladores para o raio fixo (com os anéis sobrepostos)
