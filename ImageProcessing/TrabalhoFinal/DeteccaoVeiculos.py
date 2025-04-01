@@ -1,6 +1,34 @@
 import numpy as np
+import json
+from matplotlib.widgets import RectangleSelector
 from PIL import Image, ImageDraw
 import matplotlib.pyplot as plt
+
+def define_ground_truth(image_paths):
+    gt_boxes = {}
+    
+    def onselect(eclick, erelease):
+        x1, y1 = int(eclick.xdata), int(eclick.ydata)
+        x2, y2 = int(erelease.xdata), int(erelease.ydata)
+        gt_boxes[current_image] = (min(x1,x2), min(y1,y2), max(x1,x2), max(y1,y2))
+        plt.close()
+    
+    for path in image_paths:
+        global current_image
+        current_image = path
+        img = Image.open(path)
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.imshow(img)
+        rs = RectangleSelector(ax, onselect, useblit=True,
+                               button=[1], minspanx=5, minspany=5,
+                               spancoords='pixels', interactive=True)
+        plt.title(f'Selecione o veículo: {path}')
+        plt.show()
+    
+    with open('ground_truth.json', 'w') as f:
+        json.dump(gt_boxes, f)
+
+# Executar apenas uma vez para criar as anotações
 
 # Converter para escala de cinza
 def to_grayscale(img):
@@ -48,9 +76,6 @@ def otsu_threshold(image):
 def adaptive_threshold_edges(edge_mag):
     # Aplica um threshold adaptativo à imagem de magnitude de bordas usando o método de Otsu
     thresh = otsu_threshold(edge_mag)
-    # Garante que o threshold não seja muito baixo (mínimo de 30) para evitar que muito ruído seja considerado como borda
-    if thresh < 30:
-        thresh = 30
     # Cria uma imagem binária: pixels com valor igual ou superior ao threshold recebem 255, os demais recebem 0
     binary = (edge_mag >= thresh).astype(np.uint8) * 255
     return binary
@@ -184,10 +209,10 @@ def find_all_bounding_boxes(binary_np, min_size=500):
     return bboxes
 
 def select_best_bbox(bboxes, img_w, img_h,
-                     min_area_ratio=0.02,  # permite caixas menores
-                     max_area_ratio=0.8,
-                     min_ratio=0.8,
-                     max_ratio=4.0):
+                     min_area_ratio,  # permite caixas menores
+                     max_area_ratio,
+                     min_ratio,
+                     max_ratio):
     # Seleciona o bounding box mais plausível (possivelmente o carro) baseado em critérios de área e proporção
     img_area = img_w * img_h  # Área total da imagem
     candidates = []
@@ -225,7 +250,31 @@ def select_best_bbox(bboxes, img_w, img_h,
     
  # Função principal que processa a imagem e tenta detectar um veículo 
 
+def calculate_iou(boxA, boxB):
+    # Box format: (x_min, y_min, x_max, y_max)
+    if boxA is None or boxB is None:
+        return 0.0
+    
+    # Determinar coordenadas da interseção
+    xA = max(boxA[0], boxB[0])
+    yA = max(boxA[1], boxB[1])
+    xB = min(boxA[2], boxB[2])
+    yB = min(boxA[3], boxB[3])
+    
+    # Calcular área de interseção
+    inter_area = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+    
+    # Calcular áreas individuais
+    boxA_area = (boxA[2] - boxA[0] + 1) * (boxA[3] - boxA[1] + 1)
+    boxB_area = (boxB[2] - boxB[0] + 1) * (boxB[3] - boxB[1] + 1)
+    
+    # Calcular IoU
+    iou = inter_area / float(boxA_area + boxB_area - inter_area)
+    return iou
+
 def detect_vehicle(image_path):
+    with open('ground_truth.json') as f:
+        gt_boxes = json.load(f)
     pil_img = Image.open(image_path)  # Carrega a imagem utilizando a biblioteca PIL
     w, h = pil_img.size  # Obtém a largura e a altura da imagem
 
@@ -238,28 +287,38 @@ def detect_vehicle(image_path):
     edges = sobel_edge_detection(med_filtered)  # Detecta as bordas usando o operador de Sobel
     edge_bin = adaptive_threshold_edges(edges)  # Binariza a imagem 
     
-    closed = close_binary(edge_bin, se_size=5)
-    opened = open_binary(closed, se_size=3)
+    closed = close_binary(edge_bin, se_size=15)
+    opened = open_binary(closed, se_size=5)
     
     bboxes = find_all_bounding_boxes(opened, min_size=500)
     # Tenta selecionar o bounding box que melhor se encaixa nos critérios para ser considerado um carro
     best = select_best_bbox(bboxes, w, h,
-                            min_area_ratio=0.02,
-                            max_area_ratio=0.8,
-                            min_ratio=0.8,
-                            max_ratio=4.0)
+                            min_area_ratio=0.1,
+                            max_area_ratio=0.95,
+                            min_ratio=1.2,
+                            max_ratio=3.0)
 
     # Para depuração: desenha todos os bounding boxes encontrados em azul
     draw = ImageDraw.Draw(pil_img)
     for bbox in bboxes:
         draw.rectangle([bbox[0], bbox[1], bbox[2], bbox[3]], outline="blue", width=1)
     
+    if best is not None:
+        detected_box = (best[0], best[1], best[2], best[3])
+    else:
+        detected_box = None
+    
+    gt_box = tuple(gt_boxes.get(image_path, (0,0,0,0)))
+    iou = calculate_iou(detected_box, gt_box) if detected_box else 0.0
+
+    draw.text((10, 10), f"IoU: {iou:.2f}", fill="yellow")
     # Se um bounding box plausível foi encontrado, destaca-o em vermelho e imprime as informações
     if best is not None:
         print(f"Imagem '{image_path}': Carro detectado!")
         print(f"BBox = (x_min={best[0]}, y_min={best[1]}, x_max={best[2]}, y_max={best[3]})")
         draw.rectangle([best[0], best[1], best[2], best[3]], outline="red", width=3)
         title = f"Carro detectado: {image_path}"
+        print(f"IoU: {iou:.2f}")
     else:
         # Caso contrário, informa que nenhum carro foi detectado
         print(f"Imagem '{image_path}': NÃO há carro detectado.")
@@ -273,20 +332,21 @@ def detect_vehicle(image_path):
     plt.show()
 
 def main():
+
     image_list = [
-        "naoECarro/imagemPIMG2.jpeg",
-        "naoECarro/imagemPIMG3.jpeg",
-        "image_0042.jpg",
-        "image_0014.jpg",
-        "image_0028.jpg",  
-        "image_0012.jpg",
-        "image_0003.jpg",
-        "image_0004.jpg",
-        "image_0006.jpg",
-        "image_0007.jpg",
-        "image_0008.jpg",
-        "image_0009.jpg",
+        "ProjectsPy\ImageProcessing\TrabalhoFinal\image_0042.jpg",
+        "ProjectsPy\ImageProcessing\TrabalhoFinal\image_0014.jpg",
+        "ProjectsPy\ImageProcessing\TrabalhoFinal\image_0028.jpg",  
+        "ProjectsPy\ImageProcessing\TrabalhoFinal\image_0012.jpg",
+        "ProjectsPy\ImageProcessing\TrabalhoFinal\image_0003.jpg",
+        "ProjectsPy\ImageProcessing\TrabalhoFinal\image_0004.jpg",
+        "ProjectsPy\ImageProcessing\TrabalhoFinal\image_0006.jpg",
+        "ProjectsPy\ImageProcessing\TrabalhoFinal\image_0007.jpg",
+        "ProjectsPy\ImageProcessing\TrabalhoFinal\image_0008.jpg",
+        "ProjectsPy\ImageProcessing\TrabalhoFinal\image_0009.jpg",
     ]
+    # define_ground_truth(image_list)  # Comente após criar o arquivo
+
     for path in image_list:
         detect_vehicle(path)
 
