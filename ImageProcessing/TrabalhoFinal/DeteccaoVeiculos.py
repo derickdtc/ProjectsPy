@@ -76,9 +76,6 @@ def otsu_threshold(image):
 def adaptive_threshold_edges(edge_mag):
     # Aplica um threshold adaptativo à imagem de magnitude de bordas usando o método de Otsu
     thresh = otsu_threshold(edge_mag)
-    # Garante que o threshold não seja muito baixo (mínimo de 30) para evitar que muito ruído seja considerado como borda
-    # if thresh < 30:
-    #     thresh = 30
     # Cria uma imagem binária: pixels com valor igual ou superior ao threshold recebem 255, os demais recebem 0
     binary = (edge_mag >= thresh).astype(np.uint8) * 255
     return binary
