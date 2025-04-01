@@ -345,7 +345,7 @@ def main():
         "ProjectsPy\ImageProcessing\TrabalhoFinal\image_0008.jpg",
         "ProjectsPy\ImageProcessing\TrabalhoFinal\image_0009.jpg",
     ]
-    # define_ground_truth(image_list)  # Comente após criar o arquivo
+    #define_ground_truth(image_list)  # Comente após criar o arquivo
 
     for path in image_list:
         detect_vehicle(path)
