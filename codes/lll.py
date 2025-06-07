@@ -95,7 +95,12 @@ cid = str(input('Digite a cidade:  ')).strip()
 print(cid[:5].upper() == 'SANTO')
 
 """
-nome = str(input('Digite a seu nome:  ')).strip()
+#nome = str(input('Digite a seu nome:  ')).strip()
+
+frase = str(input('Digite uma frase:  ')).upper.strip()
+print('A letra A aparece {} vezes na frase' .format(frase.count('A')))
+ 
+
 
 
 
