@@ -1,0 +1,10 @@
+{
+  "_id": {
+    "$oid": "Unidade01"
+  },
+  "numero": 0,
+  "bairro": "Rosa Elze",
+  "rua": "Avenida Marechal Rondon",
+  "cidade": "Sao cristovao",
+  "CEP": "49100-000"
+}

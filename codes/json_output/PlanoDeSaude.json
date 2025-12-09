@@ -1,0 +1,8 @@
+{
+  "_id": {
+    "$oid": "Plano01"
+  },
+  "nome": "rapvide",
+  "tipo": "afiliado",
+  "cobertura": "Toda Sergipe"
+}

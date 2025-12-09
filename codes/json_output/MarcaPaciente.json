@@ -1,0 +1,7 @@
+{
+  "_id": {
+    "$oid": "MarcaPaciente01"
+  },
+  "recepcionista_id": "UsuarioRecepcionista01",
+  "paciente_id": "UsuarioPaciente01"
+}

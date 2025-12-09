@@ -1,0 +1,16 @@
+{
+  "_id": {
+    "$oid": "UsuarioRecepcionista01"
+  },
+  "email": "emailh@gmail.com",
+  "senha": "senha124",
+  "telefone": "40028924",
+  "nome": "Tia Tendo",
+  "data_nascimento": {
+    "$date": "2000-03-01T00:00:00Z"
+  },
+  "tipo_usuario": "recepcionista",
+  "recepcionista": {
+    "consulta_id": "Consulta01"
+  }
+}

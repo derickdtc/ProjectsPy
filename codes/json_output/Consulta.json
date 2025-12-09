@@ -1,0 +1,11 @@
+{
+  "_id": {
+    "$oid": "Consulta01"
+  },
+  "medico_id": "UsuarioMedico01",
+  "paciente_id": "UsuarioPaciente01",
+  "status": "concluida",
+  "diagnostico": "gripe",
+  "data": "2000-05-17T16:00:00Z",
+  "preescricao_id": "Preescricao01"
+}

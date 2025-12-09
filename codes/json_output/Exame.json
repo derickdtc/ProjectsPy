@@ -1,0 +1,10 @@
+{
+  "_id": {
+    "$oid": "Exame01"
+  },
+  "tipo": "espirometria",
+  "data": "2000-05-18T16:00:00Z",
+  "resultado": "gripe",
+  "preescricao_id": "Preescricao01",
+  "historico_id": "Historico01"
+}

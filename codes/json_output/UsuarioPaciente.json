@@ -1,0 +1,16 @@
+{
+  "_id": {
+    "$oid": "UsuarioPaciente01"
+  },
+  "email": "emailf@gmail.com",
+  "senha": "senha123",
+  "telefone": "40028922",
+  "nome": "Tohdo Enty",
+  "data_nascimento": {
+    "$date": "2000-01-01T00:00:00Z"
+  },
+  "tipo_usuario": "paciente",
+  "paciente": {
+    "prioridade": 2
+  }
+}

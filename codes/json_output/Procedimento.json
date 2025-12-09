@@ -1,0 +1,8 @@
+{
+  "_id": {
+    "$oid": "Procedimento01"
+  },
+  "descricao": "procedimento simples na regiao pulmonar",
+  "preescricao_id": "Preescricao01",
+  "historico_id": "Historico01"
+}

@@ -1,0 +1,8 @@
+{
+  "_id": {
+    "$oid": "Especialidade01"
+  },
+  "nome": "neuro",
+  "descricao": "especializado doenças relacionadas ao cérebro",
+  "cod_cbo": "225112"
+}

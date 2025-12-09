@@ -1,0 +1,10 @@
+{
+  "_id": {
+    "$oid": "Pagamento01"
+  },
+  "paciente_id": "UsuarioPaciente01",
+  "valor": 59.9,
+  "forma_pagamento": "debito",
+  "data": "2000-05-18T16:00:00Z",
+  "consulta_id": "Consulta01"
+}

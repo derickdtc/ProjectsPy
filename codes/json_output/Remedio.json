@@ -1,0 +1,9 @@
+{
+  "_id": {
+    "$oid": "Paracetamol"
+  },
+  "miligramas": 500,
+  "tarja": null,
+  "preescricao_id": "Preescricao01",
+  "historico_id": "Historico01"
+}
